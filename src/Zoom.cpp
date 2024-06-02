@@ -202,6 +202,28 @@ SDKError Zoom::clean() {
     return CleanUPSDK();
 }
 
+SDKError Zoom::StartRawSending(){
+    auto recCtrl = m_meetingService->GetMeetingRecordingController();
+    auto* p_videoSourceHelper = GetRawdataVideoSourceHelper();
+    if (p_videoSourceHelper) {
+        SDKError err = p_videoSourceHelper->setExternalVideoSource(virtual_camera_video_source);
+
+        if (err != SDKERR_SUCCESS) {
+            printf("attemptToStartRawVideoSending(): Failed to set external video source, error code: %d\n", err);
+        }
+        else {
+            printf("attemptToStartRawVideoSending(): Success \n");
+            }
+    }
+    else {
+        printf("attemptToStartRawVideoSending(): Failed to get video source helper\n");
+    }   
+
+    SDKError err = p_videoSourceHelper->setExternalVideoSource(virtual_camera_video_source);
+
+    return SDKERR_SUCCESS;
+}
+
 SDKError Zoom::startRawRecording() {
     auto recCtrl = m_meetingService->GetMeetingRecordingController();
 

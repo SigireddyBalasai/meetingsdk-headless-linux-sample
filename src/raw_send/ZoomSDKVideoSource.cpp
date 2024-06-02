@@ -7,6 +7,8 @@
 #include <string>
 #include <cstdio>
 #include <chrono>
+#include <fstream>
+#include <vector>
 
 
 //using namespace cv;
@@ -20,9 +22,21 @@ int height = HEIGHT;
 
 void PlayVideoFileToVirtualCamera(IZoomSDKVideoSender* video_sender, const std::string& video_source) {
 
-    //implement your code to read from a file, and send it using video_sender
-    // you can use ffmpeg to convert your video file into yuv420p format, read the frames and send each frame using video_sender
-
+    std::ifstream file(video_source, std::ios::binary);
+    if (!file.is_open()) {
+        std::cout << "failed to open video file: " << video_source << endl;
+        return;
+    }
+    else {
+        std::cout << "opened video file: " << video_source << endl;
+    }
+    
+    std::ifstream imageFile("out/image.png", std::ios::binary);
+    if (!imageFile.is_open()) {
+        std::cout << "Failed to open image file: cat.png" << std::endl;
+        return;
+    }
+    
 }
 void ZoomSDKVideoSource::onInitialize(IZoomSDKVideoSender* sender, IList<VideoSourceCapability>* support_cap_list, VideoSourceCapability& suggest_cap)
 {
@@ -43,9 +57,14 @@ void ZoomSDKVideoSource::onPropertyChange(IList<VideoSourceCapability>* support_
 void ZoomSDKVideoSource::onStartSend()
 {
     std::cout << "onStartSend" << endl;
+    std::cout << "video_source_: " << video_source_ << endl;
+    std::cout << "video_sender_: " << video_sender_ << endl;
+    std::cout << "video_play_flag: " << video_play_flag << endl;
     if (video_sender_ && video_play_flag != 1) {
         while (video_play_flag > -1) {}
         video_play_flag = 1;
+        cout << "Starting video thread" << endl;
+        cout << "video play flag: " << video_play_flag << endl;
         thread(PlayVideoFileToVirtualCamera, video_sender_, video_source_).detach();
     }
     else {

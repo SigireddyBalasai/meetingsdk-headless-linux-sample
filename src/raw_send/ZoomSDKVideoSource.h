@@ -2,6 +2,7 @@
 
 
 #include <string>
+#include "rawdata/rawdata_renderer_interface.h"
 #include "rawdata/rawdata_video_source_helper_interface.h"
 
 constexpr auto WIDTH = 640;
