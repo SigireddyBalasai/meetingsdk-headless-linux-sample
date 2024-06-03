@@ -1,3 +1,4 @@
+
 #ifndef MEETING_SDK_LINUX_SAMPLE_ZOOM_H
 #define MEETING_SDK_LINUX_SAMPLE_ZOOM_H
 
@@ -11,8 +12,7 @@
 #include "Config.h"
 #include "util/Singleton.h"
 #include "util/Log.h"
-#include "meeting_service_interface.h"
-#include "meeting_service_components/meeting_video_interface.h"
+
 #include "zoom_sdk.h"
 #include "rawdata/zoom_rawdata_api.h"
 #include "rawdata/rawdata_renderer_interface.h"
@@ -28,9 +28,6 @@
 
 #include "raw_record/ZoomSDKRendererDelegate.h"
 #include "raw_record/ZoomSDKAudioRawDataDelegate.h"
-#include "raw_send/ZoomSDKVideoSource.h"
-#include "raw_send/ZoomSDKVirtualAudioMicEvent.h"
-
 
 using namespace std;
 using namespace jwt;
@@ -55,9 +52,10 @@ class Zoom : public Singleton<Zoom> {
 
     IZoomSDKRenderer* m_videoHelper;
     ZoomSDKRendererDelegate* m_videoSource;
+
     IZoomSDKAudioRawDataHelper* m_audioHelper;
     ZoomSDKAudioRawDataDelegate* m_audioSource;
-    ZoomSDKVideoSource* virtual_camera_video_source;
+
     SDKError createServices();
     void generateJWT(const string& key, const string& secret);
 
@@ -80,36 +78,12 @@ class Zoom : public Singleton<Zoom> {
 
         if (m_config.useRawRecording()) {
             auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
-            auto* p_videoSourceHelper = GetRawdataVideoSourceHelper();
-            // Zoom::virtual_camera_video_source = new ZoomSDKVideoSource("out/run AI on your laptop....it's PRIVATE!!.mp4");
-            // SDKError err = SDKERR_SUCCESS;
-            // if(p_videoSourceHelper)
-            // {
-            //     SDKError err = p_videoSourceHelper->setExternalVideoSource(virtual_camera_video_source);
-            //     cout << virtual_camera_video_source;
-            // }
-            // if (err != SDKERR_SUCCESS) {
-			// 	printf("attemptToStartRawVideoSending(): Failed to set external video source, error code: %d\n", err);
-			// }
-			// else {
-			// 	printf("attemptToStartRawVideoSending(): Success \n");
-				IMeetingVideoController* meetingController = m_meetingService->GetMeetingVideoController();
-				meetingController->UnmuteVideo();
-
-			}
-            auto m_videoCtrl = m_meetingService->GetMeetingVideoController();
-            m_videoCtrl->UnmuteVideo();
-
 
             function<void(bool)> onRecordingPrivilegeChanged = [&](bool canRec) {
                 if (canRec)
-                {
-                    StartRawSending();
-                }
+                    startRawRecording();
                 else
-                {
                     stopRawRecording();
-                }
             };
 
             auto recordingEvent = new MeetingRecordingCtrlEvent(onRecordingPrivilegeChanged);
@@ -132,8 +106,6 @@ public:
 
     SDKError startRawRecording();
     SDKError stopRawRecording();
-
-    SDKError StartRawSending();
 
     bool isMeetingStart();
 
