@@ -1,5 +1,6 @@
 #include "Zoom.h"
 
+
 SDKError Zoom::config(int ac, char** av) {
     auto status = m_config.read(ac, av);
     if (status) {
@@ -9,6 +10,15 @@ SDKError Zoom::config(int ac, char** av) {
 
     return SDKERR_SUCCESS;
 }
+
+IUserInfo* Zoom::getMyself(){
+    
+	auto m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
+	IUserInfo* returnvalue = m_pParticipantsController->GetMySelfUser();
+	//std::cout << "UserID is : " << returnvalue << std::endl;
+	return returnvalue;
+}
+
 
 SDKError Zoom::init() { 
     InitParam initParam;
@@ -201,7 +211,16 @@ SDKError Zoom::clean() {
 
     return CleanUPSDK();
 }
+SDKError  Zoom::startSending(){
+    ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/meeting-audio.pcm");
+	IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
+	if (audioHelper) {
+		SDKError err = audioHelper->setExternalAudioSource(audio_source);
+	}
 
+    return SDKERR_SUCCESS;
+
+}
 SDKError Zoom::startRawRecording() {
     auto recCtrl = m_meetingService->GetMeetingRecordingController();
 

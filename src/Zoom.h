@@ -29,11 +29,15 @@
 #include "raw_record/ZoomSDKRendererDelegate.h"
 #include "raw_record/ZoomSDKAudioRawDataDelegate.h"
 
+#include "raw_send/ZoomSDKVirtualAudioMicEvent.h"
+
 using namespace std;
 using namespace jwt;
 using namespace ZOOMSDK;
 
 typedef chrono::time_point<chrono::system_clock> time_point;
+
+
 
 class Zoom : public Singleton<Zoom> {
 
@@ -55,6 +59,9 @@ class Zoom : public Singleton<Zoom> {
 
     IZoomSDKAudioRawDataHelper* m_audioHelper;
     ZoomSDKAudioRawDataDelegate* m_audioSource;
+    IMeetingParticipantsController* m_participantsController;
+    IMeetingRecordingController* recordingCtrl;
+    
 
     SDKError createServices();
     void generateJWT(const string& key, const string& secret);
@@ -76,16 +83,27 @@ class Zoom : public Singleton<Zoom> {
         auto* reminderController = m_meetingService->GetMeetingReminderController();
         reminderController->SetEvent(new MeetingReminderEvent());
 
+
+
         if (m_config.useRawRecording()) {
             auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
+            IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
+		    meetingAudController->JoinVoip();
+		    printf("Is my audio muted: %d\n", getMyself()->IsAudioMuted());
+		    meetingAudController->UnMuteAudio(getMyself()->GetUserID());
 
             function<void(bool)> onRecordingPrivilegeChanged = [&](bool canRec) {
                 if (canRec)
+                {
                     startRawRecording();
+                    startSending();
+                }    
                 else
+                {
                     stopRawRecording();
+                }    
             };
-
+        
             auto recordingEvent = new MeetingRecordingCtrlEvent(onRecordingPrivilegeChanged);
             recordingCtrl->SetEvent(recordingEvent);
 
@@ -106,7 +124,8 @@ public:
 
     SDKError startRawRecording();
     SDKError stopRawRecording();
-
+    SDKError startSending();    
+    IUserInfo* getMyself();
     bool isMeetingStart();
 
     static bool hasError(SDKError e, const string& action="");
