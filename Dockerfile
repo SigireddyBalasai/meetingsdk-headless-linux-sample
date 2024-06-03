@@ -34,19 +34,10 @@ RUN apt-get update  \
 
 # Install ALSA
 RUN apt-get install -y libasound2 libasound2-plugins alsa alsa-utils alsa-oss
-RUN apt-get update && \
-      apt-get -y install sudo
+
 RUN apt-get install -y  pulseaudio pulseaudio-utils
-RUN apt-get install -y v4l2loopback-dkms
 RUN apt-get install -y ffmpeg
-RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
 
-USER docker
-# Install Pulseaudio
-
-RUN usermod -aG sudo docker
-RUN modprobe v4l2loopback card_label="My Fake Webcam" exclusive_caps=1
-RUN ls -1 /dev/video*
 ## Install Tini
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
