@@ -61,6 +61,7 @@ class Zoom : public Singleton<Zoom> {
     ZoomSDKAudioRawDataDelegate* m_audioSource;
     IMeetingParticipantsController* m_participantsController;
     IMeetingRecordingController* recordingCtrl;
+    IAudioSettingContext* pAudioContext;
     
 
     SDKError createServices();
@@ -86,11 +87,11 @@ class Zoom : public Singleton<Zoom> {
 
 
         if (m_config.useRawRecording()) {
-            auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
-            IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
-		    meetingAudController->JoinVoip();
-		    printf("Is my audio muted: %d\n", getMyself()->IsAudioMuted());
-		    meetingAudController->UnMuteAudio(getMyself()->GetUserID());
+            ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/song.wav");
+            IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
+            if (audioHelper) {
+                SDKError err = audioHelper->setExternalAudioSource(audio_source);
+            }
 
             function<void(bool)> onRecordingPrivilegeChanged = [&](bool canRec) {
                 if (canRec)

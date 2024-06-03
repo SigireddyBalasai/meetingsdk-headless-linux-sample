@@ -15,7 +15,7 @@ IUserInfo* Zoom::getMyself(){
     
 	auto m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
 	IUserInfo* returnvalue = m_pParticipantsController->GetMySelfUser();
-	//std::cout << "UserID is : " << returnvalue << std::endl;
+	std::cout << "UserID is : " << returnvalue << std::endl;
 	return returnvalue;
 }
 
@@ -158,6 +158,16 @@ SDKError Zoom::join() {
 
         audioSettings->EnableAutoJoinAudio(true);
     }
+    auto pAudioContext = m_settingService->GetAudioSettings();
+		if (pAudioContext)
+		{
+            cout << "Audio Context is not null" << endl;
+			pAudioContext->EnableAutoJoinAudio(true);
+			pAudioContext->EnableAlwaysMuteMicWhenJoinVoip(true);
+			pAudioContext->SetSuppressBackgroundNoiseLevel(Suppress_BGNoise_Level_None);
+            cout << "Audio Context is not null" << endl;
+
+	}
 
     return m_meetingService->Join(joinParam);
 }
@@ -212,11 +222,12 @@ SDKError Zoom::clean() {
     return CleanUPSDK();
 }
 SDKError  Zoom::startSending(){
-    ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/meeting-audio.pcm");
-	IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
-	if (audioHelper) {
-		SDKError err = audioHelper->setExternalAudioSource(audio_source);
-	}
+        auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
+        IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
+		meetingAudController->JoinVoip();
+		printf("Is my audio muted: %d\n", getMyself()->IsAudioMuted());
+		meetingAudController->UnMuteAudio(getMyself()->GetUserID());
+
 
     return SDKERR_SUCCESS;
 

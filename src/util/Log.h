@@ -19,7 +19,7 @@ class Log {
         }
 
         static void info(const std::string& message) {
-            cout << Emoji::hourglass << " " << message << endl;
+            // cout << Emoji::hourglass << " " << message << endl;
 
         }
 
