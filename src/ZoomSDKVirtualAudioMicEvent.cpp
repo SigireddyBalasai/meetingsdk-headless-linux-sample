@@ -5,10 +5,10 @@
 #include <cstring>
 #include <cstdio>
 #include <vector>
-
 #include "rawdata/rawdata_audio_helper_interface.h"
 #include "ZoomSDKVirtualAudioMicEvent.h"
 #include "zoom_sdk_def.h" 
+#include "util/Log.h"
 
 #include <thread>
 #include <chrono>  // for sleep
@@ -57,14 +57,18 @@ void PlayAudioFileToVirtualMic(IZoomSDKAudioRawDataSender* audio_sender, string 
 /// \brief Callback for virtual audio mic to do some initialization.
 /// \param pSender, You can send audio data based on this object, see \link IZoomSDKAudioRawDataSender \endlink.
 void ZoomSDKVirtualAudioMicEvent::onMicInitialize(IZoomSDKAudioRawDataSender* pSender) {
-	//pSender->send();	pSender_ = pSender;
+	//pSender->send();	
 	printf("ZoomSDKVirtualAudioMicEvent OnMicInitialize, waiting for turnOn chat command\n");
+	this->pSender_=pSender;
+	printf("Initialization");
+
 }
 
 /// \brief Callback for virtual audio mic can send raw data with 'pSender'.
 void ZoomSDKVirtualAudioMicEvent::onMicStartSend() {
 
 	printf("onMicStartSend\n");
+	Log::success("onMicStartSend");
 	std::cout << "onStartSend" << std::endl;
 	if (pSender_ && audio_play_flag != 1) {
 		while (audio_play_flag > -1) {}
@@ -88,4 +92,5 @@ void ZoomSDKVirtualAudioMicEvent::onMicUninitialized() {
 ZoomSDKVirtualAudioMicEvent::ZoomSDKVirtualAudioMicEvent(std::string audio_source)
 {
 	audio_source_ = audio_source;
+	Log::success(audio_source);
 }

@@ -22,13 +22,17 @@ include_directories(${ZOOM_SDK}/h)
 link_directories(${ZOOM_SDK} ${ZOOM_SDK})
 link_directories(${ZOOM_SDK} ${ZOOM_SDK}/qt_libs/**)
 
-add_executable(zoomsdk src/main.cpp
+add_executable(
+        
+        zoomsdk 
+        src/util/Log.h
+        src/main.cpp
         src/Zoom.cpp
         src/Zoom.h
         src/Config.cpp
         src/Config.h
         src/util/Singleton.h
-        src/util/Log.h
+
         src/events/AuthServiceEvent.cpp
         src/events/AuthServiceEvent.h
         src/events/MeetingServiceEvent.cpp
@@ -43,8 +47,8 @@ add_executable(zoomsdk src/main.cpp
         src/raw_record/ZoomSDKRendererDelegate.h
         src/raw_send/ZoomSDKVideoSource.cpp
         src/raw_send/ZoomSDKVideoSource.h
-        src/raw_send/ZoomSDKVirtualAudioMicEvent.h
-        src/raw_send/ZoomSDKVirtualAudioMicEvent.cpp
+        src/ZoomSDKVirtualAudioMicEvent.h
+        src/ZoomSDKVirtualAudioMicEvent.cpp
 )
 
 target_include_directories(zoomsdk PRIVATE ${JWT_CPP_INCLUDE_DIRS})

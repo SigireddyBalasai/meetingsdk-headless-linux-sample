@@ -21,6 +21,7 @@
 #include "meeting_service_components/meeting_participants_ctrl_interface.h"
 #include "setting_service_interface.h"
 
+#include "meeting_service_components/meeting_video_interface.h"
 #include "events/AuthServiceEvent.h"
 #include "events/MeetingServiceEvent.h"
 #include "events/MeetingReminderEvent.h"
@@ -29,14 +30,13 @@
 #include "raw_record/ZoomSDKRendererDelegate.h"
 #include "raw_record/ZoomSDKAudioRawDataDelegate.h"
 
-#include "raw_send/ZoomSDKVirtualAudioMicEvent.h"
+#include "ZoomSDKVirtualAudioMicEvent.h"
 
 using namespace std;
 using namespace jwt;
 using namespace ZOOMSDK;
 
 typedef chrono::time_point<chrono::system_clock> time_point;
-
 
 
 class Zoom : public Singleton<Zoom> {
@@ -59,10 +59,7 @@ class Zoom : public Singleton<Zoom> {
 
     IZoomSDKAudioRawDataHelper* m_audioHelper;
     ZoomSDKAudioRawDataDelegate* m_audioSource;
-    IMeetingParticipantsController* m_participantsController;
-    IMeetingRecordingController* recordingCtrl;
-    IAudioSettingContext* pAudioContext;
-    
+    IMeetingParticipantsController* m_pParticipantsController;
 
     SDKError createServices();
     void generateJWT(const string& key, const string& secret);
@@ -84,33 +81,32 @@ class Zoom : public Singleton<Zoom> {
         auto* reminderController = m_meetingService->GetMeetingReminderController();
         reminderController->SetEvent(new MeetingReminderEvent());
 
-
-
         if (m_config.useRawRecording()) {
-            ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/song.wav");
-            IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
-            if (audioHelper) {
-                SDKError err = audioHelper->setExternalAudioSource(audio_source);
-            }
+            auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
 
             function<void(bool)> onRecordingPrivilegeChanged = [&](bool canRec) {
                 if (canRec)
                 {
-                    startRawRecording();
-                    startSending();
-                }    
+                        turnOnSendVideoAndAudio();
+                        startRawRecording();
+                        SendAudio();
+                        //turnOnSendVideoAndAudio();
+                }
+                    
                 else
                 {
                     stopRawRecording();
-                }    
+                    turnOffSendVideoandAudio();
+                }
             };
-        
+
             auto recordingEvent = new MeetingRecordingCtrlEvent(onRecordingPrivilegeChanged);
             recordingCtrl->SetEvent(recordingEvent);
 
             startRawRecording();
         }
     };
+
 
 public:
     SDKError init();
@@ -125,10 +121,16 @@ public:
 
     SDKError startRawRecording();
     SDKError stopRawRecording();
-    SDKError startSending();    
-    IUserInfo* getMyself();
-    bool isMeetingStart();
+    SDKError startSending();  
+    void onInMeeting();  
 
+    bool isMeetingStart();
+    uint32_t getUserID();
+    IUserInfo* getMyself();
+    IUserInfo* getUserObj(); 
+    void turnOnSendVideoAndAudio();
+    void turnOffSendVideoandAudio(); 
+    void SendAudio();
     static bool hasError(SDKError e, const string& action="");
 
 };
