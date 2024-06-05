@@ -1,6 +1,71 @@
 #include "Zoom.h"
 
+uint32_t Zoom::getUserID() {
+	m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
+	int returnvalue = m_pParticipantsController->GetParticipantsList()->GetItem(0);
+	std::cout << "UserID is : " << returnvalue << std::endl;
+	return returnvalue;
+}
 
+IUserInfo* Zoom::getUserObj() {
+	m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
+	int userID = m_pParticipantsController->GetParticipantsList()->GetItem(0);
+	IUserInfo* returnvalue = m_pParticipantsController->GetUserByUserID(userID);
+	std::cout << "UserID is : " << returnvalue << std::endl;
+	return returnvalue;
+}
+
+IUserInfo* Zoom::getMyself() {
+	m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
+	IUserInfo* returnvalue = m_pParticipantsController->GetMySelfUser();
+	//std::cout << "UserID is : " << returnvalue << std::endl;
+	return returnvalue;
+}
+void Zoom::turnOnSendVideoAndAudio() {
+	IMeetingVideoController* meetingVidController = m_meetingService->GetMeetingVideoController();
+	meetingVidController->UnmuteVideo();
+	IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
+	meetingAudController->JoinVoip();
+	Log::success("Is my audio muted "+ getMyself()->IsAudioMuted());
+    Log::success("Sending COnfiguration is done");
+	meetingAudController->UnMuteAudio(getMyself()->GetUserID());
+}
+
+void Zoom::turnOffSendVideoandAudio() {
+	IMeetingVideoController* meetingVidController = m_meetingService->GetMeetingVideoController();
+	meetingVidController->MuteVideo();
+	IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
+	meetingAudController->MuteAudio(getMyself()->GetUserID(), true);
+    Log::success("Sending COnfiguration is deleted");
+    Log::success("Is my audio muted "+ getMyself()->IsAudioMuted());
+
+}
+
+void Zoom::onInMeeting() {
+	if (m_meetingService->GetMeetingStatus() == ZOOM_SDK_NAMESPACE::MEETING_STATUS_INMEETING) {
+		//print all list of participants
+		int participants  = m_meetingService->GetMeetingParticipantsController()->GetParticipantsList()->GetCount();
+		Log::success("Participants count: "+ participants);
+    }
+}
+
+void Zoom::SendAudio()
+{
+        Log::success("Send audio called");
+    	ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/output.pcm");
+		IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
+        Log::success("Data Helper Created");
+		if (audioHelper) {
+            Log::success("Assigning file");
+			SDKError err = audioHelper->setExternalAudioSource(audio_source);
+            if (err != SDKERR_SUCCESS)
+            {
+                std::cerr << "Error occured start send raw audio" << std::endl;
+                return;
+            }
+	    std::cout << "Success start send raw audio" << std::endl;
+		}
+}
 SDKError Zoom::config(int ac, char** av) {
     auto status = m_config.read(ac, av);
     if (status) {
@@ -11,17 +76,12 @@ SDKError Zoom::config(int ac, char** av) {
     return SDKERR_SUCCESS;
 }
 
-IUserInfo* Zoom::getMyself(){
-    
-	auto m_pParticipantsController = m_meetingService->GetMeetingParticipantsController();
-	IUserInfo* returnvalue = m_pParticipantsController->GetMySelfUser();
-	std::cout << "UserID is : " << returnvalue << std::endl;
-	return returnvalue;
-}
+
 
 
 SDKError Zoom::init() { 
     InitParam initParam;
+    ZOOM_SDK_NAMESPACE::StartParam startParam;
 
     auto host = m_config.zoomHost().c_str();
 
@@ -32,6 +92,8 @@ SDKError Zoom::init() {
 
     initParam.enableLogByDefault = true;
     initParam.enableGenerateDump = true;
+	startParam.param.normaluserStart.isVideoOff = false;
+	startParam.param.normaluserStart.isAudioOff = false;
 
     auto err = InitSDK(initParam);
     if (hasError(err)) {
@@ -55,6 +117,8 @@ SDKError Zoom::createServices() {
 
     err = m_meetingService->SetEvent(meetingServiceEvent);
     if (hasError(err)) return err;
+
+
 
     return CreateAuthService(&m_authService);
 }
@@ -151,22 +215,13 @@ SDKError Zoom::join() {
         Log::success("used App Privilege token");
         param.app_privilege_token = m_config.joinToken().c_str();
     }
-
-    if (m_config.useRawAudio()) {
-        auto* audioSettings = m_settingService->GetAudioSettings();
-        if (!audioSettings) return SDKERR_INTERNAL_ERROR;
-
-        audioSettings->EnableAutoJoinAudio(true);
-    }
-    auto pAudioContext = m_settingService->GetAudioSettings();
-		if (pAudioContext)
-		{
-            cout << "Audio Context is not null" << endl;
-			pAudioContext->EnableAutoJoinAudio(true);
-			pAudioContext->EnableAlwaysMuteMicWhenJoinVoip(true);
-			pAudioContext->SetSuppressBackgroundNoiseLevel(Suppress_BGNoise_Level_None);
-            cout << "Audio Context is not null" << endl;
-
+    ZOOM_SDK_NAMESPACE::IAudioSettingContext* pAudioContext = m_settingService->GetAudioSettings();
+	if (pAudioContext)
+	{
+		//ensure auto join audio
+		pAudioContext->EnableAutoJoinAudio(true);
+		pAudioContext->EnableAlwaysMuteMicWhenJoinVoip(true);
+		pAudioContext->SetSuppressBackgroundNoiseLevel(Suppress_BGNoise_Level_None);
 	}
 
     return m_meetingService->Join(joinParam);
@@ -187,6 +242,8 @@ SDKError Zoom::start() {
     err = m_meetingService->Start(startParam);
     hasError(err, "start meeting");
 
+    turnOnSendVideoAndAudio();
+
     return err;
 }
 
@@ -202,6 +259,7 @@ SDKError Zoom::leave() {
 }
 
 SDKError Zoom::clean() {
+    turnOffSendVideoandAudio();
     if (m_meetingService)
         DestroyMeetingService(m_meetingService);
 
@@ -221,17 +279,7 @@ SDKError Zoom::clean() {
 
     return CleanUPSDK();
 }
-SDKError  Zoom::startSending(){
-        auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
-        IMeetingAudioController* meetingAudController = m_meetingService->GetMeetingAudioController();
-		meetingAudController->JoinVoip();
-		printf("Is my audio muted: %d\n", getMyself()->IsAudioMuted());
-		meetingAudController->UnMuteAudio(getMyself()->GetUserID());
 
-
-    return SDKERR_SUCCESS;
-
-}
 SDKError Zoom::startRawRecording() {
     auto recCtrl = m_meetingService->GetMeetingRecordingController();
 

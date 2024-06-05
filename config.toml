@@ -1,0 +1,18 @@
+  GNU nano 7.2                                                              config.toml                                                                        
+#### !! Do not store plain text credentials in production environments !!
+#### File Format: https://cliutils.github.io/CLI11/book/chapters/config.html#configure-file-format
+
+# Zoom Meeting SDK Client ID
+client-id="NzaiY1oiQQaULMswtpSA3Q"
+
+# Zoom Meeting SDK Client Secret
+client-secret="FrYxvTAXYc7OBP4EEXWrc9Z2vJaEreMf"
+
+# Use a join-url or a meeting-id and password
+join-url="https://us05web.zoom.us/j/82983628402?pwd=UHp2wRZ1mzXcuGnwiTNy9VIQiy5oBN.1"
+
+[RawAudio]
+file="meeting-audio.pcm"
+
+#[RawVideo]
+#file="meeting-video.yuv"
