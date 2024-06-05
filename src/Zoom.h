@@ -38,6 +38,32 @@ using namespace ZOOMSDK;
 
 typedef chrono::time_point<chrono::system_clock> time_point;
 
+class ZoomVideoSDKDelegate : public IZoomVideoSDKDelegate
+{
+public:
+    // Called when user joins the session
+    virtual void onSessionJoin()
+    {
+        std::cout << "Joined session successfully" << std::endl;
+
+        if (sendRawAudio) {
+            IZoomVideoSDKAudioHelper* m_pAudiohelper = video_sdk_obj->getAudioHelper();
+            if (m_pAudiohelper) {
+                std::cout << "Starting Audio" << std::endl;
+                // Start sending raw audio
+                m_pAudiohelper->startAudio();
+            }
+        }
+    }
+
+    // Called when session leaves
+    virtual void onSessionLeave()
+    {
+        std::cout << "Already left session." << std::endl;
+        exit(1);
+    }
+};
+
 
 class Zoom : public Singleton<Zoom> {
 
@@ -88,8 +114,9 @@ class Zoom : public Singleton<Zoom> {
                 if (canRec)
                 {
                         turnOnSendVideoAndAudio();
-                        startRawRecording();
                         SendAudio();
+                        startRawRecording();
+                        
                         //turnOnSendVideoAndAudio();
                 }
                     
