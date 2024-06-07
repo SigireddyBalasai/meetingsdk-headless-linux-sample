@@ -40,6 +40,7 @@ void PlayAudioFileToVirtualMic(IZoomSDKAudioRawDataSender* audio_sender, string 
 		file.seekg(0, ios::beg);
 		file.read(buffer.data(), file_size);
 
+
 		// Send the audio data to the virtual camera
 		SDKError err = audio_sender->send(buffer.data(), buffer.size(), 44100);
 		if (err != SDKERR_SUCCESS) {
@@ -48,9 +49,9 @@ void PlayAudioFileToVirtualMic(IZoomSDKAudioRawDataSender* audio_sender, string 
 		}
 		file.close();
 		// Sleep for a while before replaying (adjust the delay as needed)
-		std::this_thread::sleep_for(std::chrono::milliseconds(10000)); // 10 second delay, this is a 10 second long wave file
+		std::this_thread::sleep_for(std::chrono::milliseconds(3067)); // 10 second delay, this is a 10 second long wave file
 
-		//audio_play_flag = -1;
+		// audio_play_flag = -1;
 	}
 }
 

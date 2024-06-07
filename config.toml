@@ -9,10 +9,10 @@ client-id="NzaiY1oiQQaULMswtpSA3Q"
 client-secret="FrYxvTAXYc7OBP4EEXWrc9Z2vJaEreMf"
 
 # Use a join-url or a meeting-id and password
-join-url="https://us05web.zoom.us/j/82983628402?pwd=UHp2wRZ1mzXcuGnwiTNy9VIQiy5oBN.1"
+join-url="https://us05web.zoom.us/j/83558774607?pwd=hN7xA9gooUZ3GGTVb6PZlbWtXnWAEU.1"
 
-[RawAudio]
-file="meeting-audio.pcm"
+#[RawAudio]
+#file="meeting-audio.pcm"
 
 #[RawVideo]
 #file="meeting-video.yuv"

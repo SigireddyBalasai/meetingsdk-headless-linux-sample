@@ -29,7 +29,7 @@
 
 #include "raw_record/ZoomSDKRendererDelegate.h"
 #include "raw_record/ZoomSDKAudioRawDataDelegate.h"
-
+#include "util/Log.h"
 #include "ZoomSDKVirtualAudioMicEvent.h"
 
 using namespace std;
@@ -37,33 +37,6 @@ using namespace jwt;
 using namespace ZOOMSDK;
 
 typedef chrono::time_point<chrono::system_clock> time_point;
-
-class ZoomVideoSDKDelegate : public IZoomVideoSDKDelegate
-{
-public:
-    // Called when user joins the session
-    virtual void onSessionJoin()
-    {
-        std::cout << "Joined session successfully" << std::endl;
-
-        if (sendRawAudio) {
-            IZoomVideoSDKAudioHelper* m_pAudiohelper = video_sdk_obj->getAudioHelper();
-            if (m_pAudiohelper) {
-                std::cout << "Starting Audio" << std::endl;
-                // Start sending raw audio
-                m_pAudiohelper->startAudio();
-            }
-        }
-    }
-
-    // Called when session leaves
-    virtual void onSessionLeave()
-    {
-        std::cout << "Already left session." << std::endl;
-        exit(1);
-    }
-};
-
 
 class Zoom : public Singleton<Zoom> {
 
@@ -107,15 +80,17 @@ class Zoom : public Singleton<Zoom> {
         auto* reminderController = m_meetingService->GetMeetingReminderController();
         reminderController->SetEvent(new MeetingReminderEvent());
 
-        if (m_config.useRawRecording()) {
-            auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
-
+        auto recordingCtrl = m_meetingService->GetMeetingRecordingController();
+            Log::info("attempting to turn on send audio");
+            turnOnSendVideoAndAudio();
+            Log::success("mic unmuted");
             function<void(bool)> onRecordingPrivilegeChanged = [&](bool canRec) {
                 if (canRec)
                 {
+                    startRawRecording();
                         turnOnSendVideoAndAudio();
                         SendAudio();
-                        startRawRecording();
+                        
                         
                         //turnOnSendVideoAndAudio();
                 }
@@ -131,7 +106,7 @@ class Zoom : public Singleton<Zoom> {
             recordingCtrl->SetEvent(recordingEvent);
 
             startRawRecording();
-        }
+        
     };
 
 

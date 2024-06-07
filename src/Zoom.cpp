@@ -52,7 +52,7 @@ void Zoom::onInMeeting() {
 void Zoom::SendAudio()
 {
         Log::success("Send audio called");
-    	ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/output.pcm");
+    	ZoomSDKVirtualAudioMicEvent* audio_source = new ZoomSDKVirtualAudioMicEvent("out/file.wav");
 		IZoomSDKAudioRawDataHelper* audioHelper = GetAudioRawdataHelper();
         Log::success("Data Helper Created");
 		if (audioHelper) {
